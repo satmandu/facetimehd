@@ -15,6 +15,9 @@
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5,4,0)
 #include <linux/pci-aspm.h>
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,18,0)
+#include <linux/dma-mapping.h>
+#endif
 #include <linux/io.h>
 #include <linux/interrupt.h>
 #include <linux/workqueue.h>
@@ -396,7 +399,11 @@ static int fthd_pci_init(struct fthd_private *dev_priv)
 		goto fail_irq;
 
 	dev_info(&pdev->dev, "Setting %ubit DMA mask\n", dev_priv->dma_mask);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,18,0)
+	dma_set_coherent_mask(&dev_priv->pdev->dev, DMA_BIT_MASK(dev_priv->dma_mask));
+#else
 	pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(dev_priv->dma_mask));
+#endif
 
 	pci_set_master(pdev);
 	pci_set_drvdata(pdev, dev_priv);
